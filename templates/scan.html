@@ -1,0 +1,127 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Receipt — ClaimFlux SA</title>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com/)"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <header class="border-b bg-white">
+        <div class="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="/" class="text-xl font-bold">ClaimFlux SA</a>
+            <nav>
+                <a href="/dashboard" class="text-gray-600 hover:text-black text-sm">Dashboard</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="max-w-2xl mx-auto mt-16 px-6">
+        <h1 class="text-3xl font-bold mb-2">Scan Your Receipt</h1>
+        <p class="text-gray-600 mb-8">Paste your Takealot, Makro, or Game receipt and we'll find hidden warranties automatically.</p>
+
+        <div class="bg-white rounded-2xl shadow-lg border p-6">
+            <label class="block font-semibold mb-2">Your Email</label>
+            <input type="email" id="emailInput" placeholder="your@email.com"
+                   class="w-full px-4 py-3 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-black">
+
+            <label class="block font-semibold mb-2">Receipt Text</label>
+            <p class="text-sm text-gray-500 mb-2">Copy and paste the entire receipt email or order confirmation.</p>
+            <textarea id="receiptInput" rows="10"
+                      placeholder="Paste your receipt here...&#10;&#10;Example:&#10;Takealot Order #12345&#10;Samsung RF23M8070SG Fridge - R12,999&#10;Purchased: 15 March 2026"
+                      class="w-full px-4 py-3 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-black"></textarea>
+
+            <button onclick="scanReceipt()" id="scanBtn"
+                    class="w-full bg-black text-white py-4 rounded-xl text-lg font-semibold hover:bg-gray-800 transition">
+                Scan Receipt →
+            </button>
+
+            <p class="text-xs text-gray-500 mt-3 text-center">Each scan costs a small amount of AI processing. Results in ~10 seconds.</p>
+        </div>
+
+        <div id="results" class="mt-6"></div>
+    </div>
+
+    <script>
+    async function scanReceipt() {
+        const email = document.getElementById('emailInput').value.trim();
+        const receipt = document.getElementById('receiptInput').value.trim();
+        const btn = document.getElementById('scanBtn');
+        const resultsDiv = document.getElementById('results');
+
+        if (!email) {
+            alert('Please enter your email.');
+            return;
+        }
+        if (receipt.length < 20) {
+            alert('Please paste the full receipt text.');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Scanning with AI...';
+        resultsDiv.innerHTML = '<div class="text-center py-8"><div class="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-black rounded-full"></div><p class="text-gray-500 mt-2">Extracting products...</p></div>';
+
+        try {
+            const response = await fetch('/api/scan-receipt', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email, receipt_text: receipt})
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                resultsDiv.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-xl p-6"><p class="text-red-800">${data.error}</p></div>`;
+                return;
+            }
+
+            let html = `<div class="bg-green-50 border border-green-200 rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-green-900 mb-2">✅ Scan Complete</h3>
+                <p class="text-green-800">Found <strong>${data.products_found}</strong> product(s). <strong>${data.warranty_matches}</strong> warranty match(es).</p>`;
+
+            if (data.products && data.products.length > 0) {
+                html += '<div class="mt-4 space-y-3">';
+                data.products.forEach(p => {
+                    html += `
+                        <div class="bg-white rounded-xl p-4 border">
+                            <p class="font-semibold">${p.brand} — ${p.model}</p>
+                            <p class="text-sm text-gray-500">Category: ${p.category} | Purchased: ${p.purchase_date || 'Unknown'}</p>
+                            <p class="text-sm text-gray-500">Price: R${p.purchase_price || 'Unknown'}</p>
+                        </div>`;
+                });
+                html += '</div>';
+            }
+
+            if (data.matches && data.matches.length > 0) {
+                html += '<h4 class="font-semibold mt-4 mb-2">🔍 Warranty Matches:</h4>';
+                data.matches.forEach(m => {
+                    html += `
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-2">
+                            <p class="font-semibold">${m.product.brand} — ${m.product.model}</p>
+                            <p class="text-sm">${m.warranty.part_covered} — <strong>${m.warranty.duration}</strong> (${m.warranty.type})</p>
+                        </div>`;
+                });
+            }
+
+            html += `
+                <div class="mt-4">
+                    <a href="/dashboard" class="bg-black text-white px-6 py-3 rounded-xl font-semibold inline-block hover:bg-gray-800 transition">View Dashboard →</a>
+                </div>
+            </div>`;
+
+            resultsDiv.innerHTML = html;
+
+        } catch (error) {
+            resultsDiv.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-xl p-6"><p class="text-red-800">Error scanning receipt. Please try again.</p></div>';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Scan Receipt →';
+        }
+    }
+    </script>
+
+</body>
+</html>
