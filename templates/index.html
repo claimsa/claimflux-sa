@@ -151,10 +151,14 @@
     }
 
     async function startClaim(warrantyId) {
+        const btn = document.querySelector('button[onclick^="startClaim"]);
+        btn.disabled = true
+        btn.textContent = 'Filing...';
+
         const email = document.getElementById('emailInput').value;
         const purchaseDate = document.getElementById('purchaseDate').value;
         const retailer = document.getElementById('retailerSelect').value;
-        const issue = document.getElementById('issueInput').value;
+        const is sue = document.getElementById('issueInput').value;
         const query = document.getElementById('searchInput').value;
 
         if (!email || !purchaseDate) {
@@ -183,6 +187,8 @@
                 message += `\\n\\n--- CPA CLAIM LETTER ---\\n${data.cpa_letter}\\n--- END OF LETTER ---`;
             }
             alert(message);
+            btn.disabled = false
+            btn.textContent = 'File My Claim →';
 
             // Also show the letter on the page
             if (data.cpa_letter) {
@@ -197,6 +203,8 @@
             }
         } else {
             alert('Something went wrong. Try again.');
+            btn.disabled = false;
+            btn.textContent = 'File My Claim →';
         }
     }
     </script>
