@@ -422,7 +422,12 @@ def search():
         )
 
     results = []
+    seen = set()
     for m in matches:
+        key = (m['brand'], m['part_covered'], m['duration_years'])
+        if key in seen:
+            continue
+        seen.add(key)
         results.append(
             {
                 "id": m["id"],
@@ -623,8 +628,10 @@ def start_claim():
     session["user_email"] = email
     # Send CPA letter via email
     if cpa_letter and email:
-        subject = f"Your CPA Claim Letter - {product_query}"
-        email_body = f"""Hi there,
+        import threading
+        def send_later():
+            subject = f"Your CPA Claim Letter - {product_query}"
+            email_body = f"""Hi there,
 
 Your CPA claim has been started with ClaimFlux SA.
 
@@ -635,7 +642,9 @@ Your CPA claim has been started with ClaimFlux SA.
 ClaimFlux SA
 [https://claimflux.co.za](https://claimflux.co.za/)
 """
-        send_email(email, subject, email_body)
+            send_email(email, subject, email_body)
+
+        threading.Thread(target=send_later).start()
     return jsonify(
         {
             "success": True,
