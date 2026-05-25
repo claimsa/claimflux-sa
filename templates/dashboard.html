@@ -4,139 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — ClaimFlux SA</title>
-    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com/)"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 min-h-screen">
-
+    
     <header class="border-b bg-white">
         <div class="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
             <a href="/" class="text-xl font-bold">ClaimFlux SA</a>
-            <span class="text-gray-600 text-sm">Logged in</span>
+            <nav class="space-x-4">
+                <a href="/scan" class="text-gray-600 hover:text-black text-sm">Scan Receipt</a>
+                <a href="/dashboard" class="text-black font-semibold text-sm">Dashboard</a>
+            </nav>
         </div>
     </header>
 
-     <div class="max-w-3xl mx-auto mt-10 px-6">
+    <div class="max-w-3xl mx-auto mt-10 px-6">
         <h1 class="text-3xl font-bold mb-2">Your Dashboard</h1>
         <p class="text-gray-500 mb-8">Track your claims and CPA deadlines here.</p>
-    
-        <!-- Stats Cards -->
+        
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div class="bg-white rounded-2xl p-6 shadow-sm border">
-                <p class="text-gray-500 text-sm">Total Claims</p>
-                <p class="text-3xl font-bold mt-1" id="totalClaims">0</p>
-            </div>
-            <div class="bg-white rounded-2xl p-6 shadow-sm border">
-                <p class="text-gray-500 text-sm">Recovered So Far</p>
-                <p class="text-3xl font-bold text-green-600 mt-1" id="totalRecovered">R0</p>
-            </div>
-            <div class="bg-white rounded-2xl p-6 shadow-sm border">
-                <p class="text-gray-500 text-sm">Urgent Alerts</p>
-                <p class="text-3xl font-bold text-red-600 mt-1" id="urgentAlerts">0</p>
-            </div>
+            <div class="bg-white rounded-2xl p-6 shadow-sm border"><p class="text-gray-500 text-sm">Total Claims</p><p class="text-3xl font-bold mt-1" id="totalClaims">0</p></div>
+            <div class="bg-white rounded-2xl p-6 shadow-sm border"><p class="text-gray-500 text-sm">Recovered So Far</p><p class="text-3xl font-bold text-green-600 mt-1" id="totalRecovered">R0</p></div>
+            <div class="bg-white rounded-2xl p-6 shadow-sm border"><p class="text-gray-500 text-sm">Urgent Alerts</p><p class="text-3xl font-bold text-red-600 mt-1" id="urgentAlerts">0</p></div>
         </div>
-    
-        <!-- CPA Alerts -->
-        <div id="alertsSection" class="hidden mb-6">
-            <h2 class="text-xl font-semibold mb-3">🔔 CPA Deadline Alerts</h2>
-        </div>
-    
-        <!-- New Search -->
+        
+        <div id="alertsSection" class="hidden mb-6"><h2 class="text-xl font-semibold mb-3">CPA Deadline Alerts</h2></div>
+        
         <div class="bg-white rounded-2xl p-8 shadow-sm border mb-6">
             <h3 class="font-semibold text-lg mb-2">Start a New Check</h3>
             <p class="text-gray-600 mb-4">Check another product for hidden warranties.</p>
-            <a href="/" class="bg-black text-white px-6 py-3 rounded-xl font-semibold inline-block hover:bg-gray-800 transition">
-                Search Products →
-            </a>
+            <a href="/" class="bg-black text-white px-6 py-3 rounded-xl font-semibold inline-block hover:bg-gray-800 transition">Search Products →</a>
         </div>
-    
-        <!-- Claims List -->
+        
         <h2 class="text-xl font-semibold mb-4">Your Claims</h2>
-        <div id="claimsList" class="space-y-4">
-            <p class="text-gray-400 text-center py-8">Loading...</p>
-        </div>
-    </div>   
+        <div id="claimsList" class="space-y-4"><p class="text-gray-400 text-center py-8">Loading...</p></div>
+    </div>
 
     <script>
     async function loadDashboard() {
         try {
             const response = await fetch('/api/my-claims');
             const data = await response.json();
-        
-            // Show CPA alerts first
+            
             if (data.cpa_alerts && data.cpa_alerts.length > 0) {
                 let alertHtml = '';
                 data.cpa_alerts.forEach(a => {
-                    const colors = {
-                        'expired': 'bg-red-100 border-red-300 text-red-800',
-                        'critical': 'bg-red-50 border-red-200 text-red-700',
-                        'warning': 'bg-yellow-50 border-yellow-200 text-yellow-700',
-                        'ok': 'bg-green-50 border-green-200 text-green-700'
-                    };
-                    const icons = {
-                        'expired': '❌',
-                        'critical': '🚨',
-                        'warning': '⚠️',
-                        'ok': '✅'
-                    };
-                    alertHtml += `
-                        <div class="border rounded-xl p-4 mb-3 ${colors[a.urgency]}">
-                            <div class="flex items-center justify-between">
-                                <p class="font-semibold">${icons[a.urgency]} ${a.product_name}</p>
-                                <span class="text-sm font-bold">${a.days_left > 0 ? a.days_left + ' days left' : 'EXPIRED'}</span>
-                            </div>
-                            <p class="text-sm mt-1">Retailer: ${a.retailer || 'Unknown'} | Deadline: ${a.deadline}</p>
-                            ${a.urgency !== 'expired' ? '<p class="text-sm mt-2 font-semibold">Send the CPA letter before the deadline!</p>' : '<p class="text-sm mt-2">CPA window closed. Check for manufacturer warranty instead.</p>'}
-                        </div>`;
+                    const colors = {'expired':'bg-red-100 border-red-300 text-red-800','critical':'bg-red-50 border-red-200 text-red-700','warning':'bg-yellow-50 border-yellow-200 text-yellow-700','ok':'bg-green-50 border-green-200 text-green-700'};
+                    const icons = {'expired':'❌','critical':'🚨','warning':'⚠️','ok':'✅'};
+                    alertHtml += `<div class="border rounded-xl p-4 mb-3 ${colors[a.urgency]}"><div class="flex items-center justify-between"><p class="font-semibold">${icons[a.urgency]} ${a.product_name}</p><span class="text-sm font-bold">${a.days_left > 0 ? a.days_left + ' days left' : 'EXPIRED'}</span></div><p class="text-sm mt-1">Retailer: ${a.retailer || 'Unknown'} | Deadline: ${a.deadline}</p></div>`;
                 });
-            
-                document.getElementById('alertsSection').innerHTML = alertHtml;
+                document.getElementById('alertsSection').innerHTML += alertHtml;
                 document.getElementById('alertsSection').classList.remove('hidden');
             }
-        
-            // Stats
+            
             document.getElementById('totalClaims').textContent = data.count;
             document.getElementById('totalRecovered').textContent = 'R' + (data.total_recovered || 0).toFixed(2);
             document.getElementById('urgentAlerts').textContent = data.urgent_count || 0;
-        
-            // Claims list
+            
             if (data.claims.length === 0) {
-                document.getElementById('claimsList').innerHTML = `
-                    <div class="bg-white rounded-2xl p-10 shadow-sm border text-center">
-                        <p class="text-gray-400 text-lg">No claims filed yet.</p>
-                        <a href="/" class="text-black underline mt-2 inline-block">Search a product →</a>
-                    </div>`;
+                document.getElementById('claimsList').innerHTML = '<div class="bg-white rounded-2xl p-10 shadow-sm border text-center"><p class="text-gray-400 text-lg">No claims filed yet.</p><a href="/" class="text-black underline mt-2 inline-block">Search a product →</a></div>';
                 return;
             }
-        
+            
             let html = '';
             data.claims.forEach(c => {
-                const statusColors = {
-                    'paid': 'bg-green-100 text-green-800',
-                    'filed': 'bg-blue-100 text-blue-800',
-                    'initiated': 'bg-yellow-100 text-yellow-800'
-                };
+                const statusColors = {'paid':'bg-green-100 text-green-800','filed':'bg-blue-100 text-blue-800','initiated':'bg-yellow-100 text-yellow-800'};
                 const statusColor = statusColors[c.status] || 'bg-gray-100 text-gray-800';
-            
-                html += `
-                    <div class="bg-white rounded-2xl p-6 shadow-sm border">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h3 class="font-semibold">${c.warranties?.brand || 'Product'} — ${c.warranties?.part_covered || 'Warranty Claim'}</h3>
-                                <p class="text-gray-500 text-sm">Filed: ${new Date(c.filed_date).toLocaleDateString('en-ZA')}</p>
-                            </div>
-                            <span class="px-3 py-1 rounded-full text-sm font-medium ${statusColor}">${c.status}</span>
-                        </div>
-                        ${c.user_payout ? `<p class="mt-3 text-green-600 font-semibold">Your payout: R${c.user_payout.toFixed(2)}</p>` : ''}
-                    </div>`;
+                html += `<div class="bg-white rounded-2xl p-6 shadow-sm border"><div class="flex justify-between items-start"><div><h3 class="font-semibold">${c.warranties?.brand || 'Product'} — ${c.warranties?.part_covered || 'Warranty Claim'}</h3><p class="text-gray-500 text-sm">Filed: ${new Date(c.filed_date).toLocaleDateString('en-ZA')}</p></div><span class="px-3 py-1 rounded-full text-sm font-medium ${statusColor}">${c.status}</span></div>${c.user_payout ? `<p class="mt-3 text-green-600 font-semibold">Your payout: R${c.user_payout.toFixed(2)}</p>` : ''}</div>`;
             });
-        
             document.getElementById('claimsList').innerHTML = html;
-        
         } catch (error) {
-            document.getElementById('claimsList').innerHTML = '<p class="text-red-500">Error loading dashboard. Please refresh.</p>';
+            document.getElementById('claimsList').innerHTML = '<p class="text-red-500">Error loading. Please refresh.</p>';
         }
     }
-
     loadDashboard();
     </script>
 </body>
