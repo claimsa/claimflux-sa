@@ -7,6 +7,8 @@ from supabase import create_client
 import openai
 import os
 import secrets
+import json
+import base64
 from datetime import datetime, timedelta
 import smtplib
 from email.mime.text import MIMEText
@@ -446,7 +448,6 @@ def search():
 @app.route('/api/scan-receipt-image', methods=['POST'])
 def scan_receipt_image():
     """Upload receipt image and extract products using GPT-4o Vision"""
-    import base64
     
     data = request.json
     image_base64 = data.get('image_base64', '')
@@ -478,7 +479,6 @@ If no products found, return {"products": [], "total_spent": 0}."""
             max_tokens=1000
         )
         
-        import json
         extracted = json.loads(response.choices[0].message.content)
         
     except Exception as e:
