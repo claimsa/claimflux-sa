@@ -464,14 +464,12 @@ def scan_receipt_image():
             messages=[
                 {
                     "role": "system",
-                    "content": """Extract all products from this South African receipt image. Return ONLY JSON:
-{"products": [{"brand": "", "model": "", "category": "", "purchase_date": "YYYY-MM-DD", "purchase_price": 0.00, "retailer": ""}], "total_spent": 0.00}
-If no products found, return {"products": [], "total_spent": 0}."""
+                    "content": "Extract all products from this SA receipt image. Return ONLY JSON: {\"products\": [{\"brand\": \"\", \"model\": \"\", \"category\": \"\", \"purchase_date\": \"YYYY-MM-DD\", \"purchase_price\": 0.00, \"retailer\": \"\"}], \"total_spent\": 0.00}"
                 },
                 {
                     "role": "user",
                     "content": [
-                        {"type": "text", "text": "Extract all products from this receipt image."},
+                        {"type": "text", "text": "Extract all products from this receipt."},
                         {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
                     ]
                 }
@@ -503,9 +501,7 @@ If no products found, return {"products": [], "total_spent": 0}."""
         "products": extracted.get('products', []),
         "matches": [{"product": m['product'], "warranty": {"part_covered": m['warranty']['part_covered'], "duration": f"{m['warranty']['duration_years']} years", "type": m['warranty']['type']}} for m in matches]
     })
-
-@app.route('/api/scan-receipt', methods=['POST'])
-def scan_receipt():
+    
 @ app.route('/api/scan-receipt', methods=['POST'])
 def scan_receipt():
     """Upload receipt text or image description and get warranty matches"""
