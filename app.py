@@ -443,6 +443,69 @@ def search():
 
 
 @app.route("/api/check-cpa", methods=["POST"])
+@app.route('/api/scan-receipt-image', methods=['POST'])
+def scan_receipt_image():
+    """Upload receipt image and extract products using GPT-4o Vision"""
+    import base64
+    
+    data = request.json
+    image_base64 = data.get('image_base64', '')
+    user_email = data.get('email', '').strip()
+    
+    if not image_base64:
+        return jsonify({"error": "No image provided."}), 400
+    if not user_email:
+        return jsonify({"error": "Email is required."}), 400
+    
+    try:
+        response = openai.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": """Extract all products from this South African receipt image. Return ONLY JSON:
+{"products": [{"brand": "", "model": "", "category": "", "purchase_date": "YYYY-MM-DD", "purchase_price": 0.00, "retailer": ""}], "total_spent": 0.00}
+If no products found, return {"products": [], "total_spent": 0}."""
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "Extract all products from this receipt image."},
+                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
+                    ]
+                }
+            ],
+            max_tokens=1000
+        )
+        
+        import json
+        extracted = json.loads(response.choices[0].message.content)
+        
+    except Exception as e:
+        return jsonify({"error": f"Failed to analyze image: {str(e)}"}), 500
+    
+    if not extracted.get('products'):
+        return jsonify({"success": True, "products_found": 0, "message": "No products detected."})
+    
+    matches = match_products_to_warranties(extracted)
+    
+    existing = supabase.table('users').select('*').eq('email', user_email).execute()
+    if not existing.data:
+        supabase.table('users').insert({'email': user_email}).execute()
+    
+    session['user_email'] = user_email
+    
+    return jsonify({
+        "success": True,
+        "products_found": len(extracted.get('products', [])),
+        "warranty_matches": len(matches),
+        "total_spent": extracted.get('total_spent', 0),
+        "products": extracted.get('products', []),
+        "matches": [{"product": m['product'], "warranty": {"part_covered": m['warranty']['part_covered'], "duration": f"{m['warranty']['duration_years']} years", "type": m['warranty']['type']}} for m in matches]
+    })
+
+@app.route('/api/scan-receipt', methods=['POST'])
+def scan_receipt():
 @ app.route('/api/scan-receipt', methods=['POST'])
 def scan_receipt():
     """Upload receipt text or image description and get warranty matches"""
