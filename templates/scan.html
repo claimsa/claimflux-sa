@@ -20,26 +20,51 @@
 
     <div class="max-w-2xl mx-auto mt-16 px-6">
         <h1 class="text-4xl font-bold tracking-tight text-gray-900 mb-2">Scan Your Receipt</h1>
-        <p class="text-lg text-gray-600 mb-8">Upload a photo or paste text from your Takealot, Makro, or Game receipt.</p>
+        <p class="text-lg text-gray-600 mb-8">Enter your receipt details or upload a photo. We'll find hidden warranties.</p>
         
-        <!-- Option 1: Paste Text -->
+        <!-- Option 1: Structured Receipt Input -->
         <div class="bg-white rounded-2xl shadow-lg border p-6 mb-6">
-            <h3 class="font-semibold text-lg mb-3">📋 Paste Receipt Text</h3>
-            <label class="block text-sm text-gray-500 mb-2">Your Email</label>
+            <h3 class="font-semibold text-lg mb-3">📋 Enter Receipt Details</h3>
+            <p class="text-sm text-gray-500 mb-4">Fill in the details from your receipt below.</p>
+            
+            <label class="block text-sm text-gray-500 mb-1">Your Email *</label>
             <input type="email" id="emailInput" placeholder="your@email.com" class="w-full px-4 py-3 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-black">
             
-            <label class="block text-sm text-gray-500 mb-2">Receipt Text</label>
-            <p class="text-xs text-gray-400 mb-2">💡 Copy the entire order confirmation email from Takealot, Makro, Game, or any SA retailer and paste it below. Include product names, prices, and dates for best results.</p>
-            <textarea id="receiptInput" rows="6" placeholder="Example format:
-
-            Takealot Order #12345
-            Samsung RF23M8070SG 637L French Door Fridge - R14,999
-            LG WM4000HWA 12kg Front Loader Washing Machine - R8,499
-            Purchased: 12 March 2026
-
-            Or paste your receipt exactly as it appears in your email." class="w-full px-4 py-3 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-black"></textarea>
+            <label class="block text-sm text-gray-500 mb-1">Retailer</label>
+            <select id="retailerInput" class="w-full px-4 py-3 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-black">
+                <option value="">Select retailer</option>
+                <option>Takealot</option>
+                <option>Makro</option>
+                <option>Game</option>
+                <option>Builders Warehouse</option>
+                <option>Hirsch's</option>
+                <option>Dion Wired</option>
+                <option>Checkers</option>
+                <option>Woolworths</option>
+                <option>Pick n Pay</option>
+                <option>Spar</option>
+                <option>Other</option>
+            </select>
             
-            <button onclick="scanText()" id="textBtn" class="w-full bg-black text-white py-3 rounded-xl font-semibold hover:bg-gray-800 transition">Scan Text →</button>
+            <label class="block text-sm text-gray-500 mb-1">Product 1</label>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <input type="text" id="product1Name" placeholder="Product name (e.g. Samsung Fridge)" class="px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-black">
+                <input type="text" id="product1Model" placeholder="Model number (e.g. RF23M8070SG)" class="px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-black">
+            </div>
+            <input type="text" id="product1Price" placeholder="Price (e.g. R14,999)" class="w-full px-4 py-3 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-black">
+            
+            <label class="block text-sm text-gray-500 mb-1">Product 2 (optional)</label>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <input type="text" id="product2Name" placeholder="Product name" class="px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-black">
+                <input type="text" id="product2Model" placeholder="Model number" class="px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-black">
+            </div>
+            <input type="text" id="product2Price" placeholder="Price" class="w-full px-4 py-3 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-black">
+            
+            <label class="block text-sm text-gray-500 mb-1">Purchase Date *</label>
+            <input type="date" id="purchaseDateInput" class="w-full px-4 py-3 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-black">
+            
+            <button onclick="scanStructured()" id="textBtn" class="w-full bg-black text-white py-3 rounded-xl font-semibold hover:bg-gray-800 transition">Check Warranties →</button>
+            <p class="text-xs text-gray-500 mt-3 text-center">We'll match your products against our warranty database.</p>
         </div>
         
         <!-- Option 2: Upload Image -->
@@ -86,26 +111,45 @@
         container.innerHTML = html;
     }
     
-    async function scanText() {
+    async function scanStructured() {
         const email = document.getElementById('emailInput').value.trim();
-        const receipt = document.getElementById('receiptInput').value.trim();
+        const retailer = document.getElementById('retailerInput').value;
+        const purchaseDate = document.getElementById('purchaseDateInput').value;
         const btn = document.getElementById('textBtn');
         const resultsDiv = document.getElementById('results');
         
         if (!email) { alert('Please enter your email.'); return; }
-        if (receipt.length < 20) { alert('Please paste the full receipt text.'); return; }
+        if (!purchaseDate) { alert('Please enter the purchase date.'); return; }
         
-        btn.disabled = true; btn.textContent = 'Scanning...';
+        let receiptText = `Retailer: ${retailer || 'Unknown'}\nDate: ${purchaseDate}\n\nProducts:\n`;
+        
+        const p1Name = document.getElementById('product1Name').value.trim();
+        const p1Model = document.getElementById('product1Model').value.trim();
+        const p1Price = document.getElementById('product1Price').value.trim();
+        if (p1Name) { receiptText += `${p1Name} ${p1Model} - ${p1Price}\n`; }
+        
+        const p2Name = document.getElementById('product2Name').value.trim();
+        const p2Model = document.getElementById('product2Model').value.trim();
+        const p2Price = document.getElementById('product2Price').value.trim();
+        if (p2Name) { receiptText += `${p2Name} ${p2Model} - ${p2Price}\n`; }
+        
+        if (!p1Name) { alert('Please enter at least one product.'); return; }
+        
+        btn.disabled = true; btn.textContent = 'Checking...';
         resultsDiv.innerHTML = '<div class="text-center py-8"><div class="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-black rounded-full"></div></div>';
         
         try {
-            const response = await fetch('/api/scan-receipt', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email, receipt_text: receipt}) });
+            const response = await fetch('/api/scan-receipt', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email, receipt_text: receiptText})
+            });
             const data = await response.json();
             showResults(data, resultsDiv);
         } catch (error) {
             resultsDiv.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-xl p-6"><p class="text-red-800">Error. Please try again.</p></div>';
         }
-        btn.disabled = false; btn.textContent = 'Scan Text →';
+        btn.disabled = false; btn.textContent = 'Check Warranties →';
     }
     
     async function scanImage() {
@@ -127,7 +171,11 @@
                 reader.readAsDataURL(fileInput.files[0]);
             });
             
-            const response = await fetch('/api/scan-receipt-image', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email, image_base64: base64}) });
+            const response = await fetch('/api/scan-receipt-image', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email, image_base64: base64})
+            });
             const data = await response.json();
             showResults(data, resultsDiv);
         } catch (error) {
