@@ -16,6 +16,26 @@ from email.mime.multipart import MIMEMultipart
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", secrets.token_hex(16))
+def set_auth_token(email, response):
+    """Set auth token as cookie"""
+    token = secrets.token_urlsafe(32)
+    supabase.table('auth_tokens').insert({
+        'email': email,
+        'token': token,
+        'expires': 'NOW() + INTERVAL \'30 days\''
+    }).execute()
+    response.set_cookie('auth_token', token, max_age=30*24*60*60, httponly=True, samesite='Lax')
+    return response
+
+def get_user_from_token():
+    """Get user email from auth token cookie"""
+    token = request.cookies.get('auth_token')
+    if not token:
+        return None
+    result = supabase.table('auth_tokens').select('*').eq('token', token).gte('expires', 'NOW()').execute()
+    if result.data:
+        return result.data[0]['email']
+    return None
 # ============ RECEIPT SCANNER (Hybrid: Rules + AI fallback) ============
 
 def extract_products_rules(receipt_text):
@@ -369,7 +389,7 @@ def scan():
 
 @app.route("/dashboard")
 def dashboard():
-    if "user_email" not in session:
+    if not get_user_from_token():
         return redirect("/")
     return render_template("dashboard.html")
 
@@ -386,11 +406,13 @@ def verify_login(token):
     )
 
     if response.data:
-        session["user_email"] = response.data[0]["email"]
+        email = response.data[0]["email"]
         supabase.table("login_tokens").update({"used": True}).eq(
             "token", token
         ).execute()
-        return redirect("/dashboard")
+        resp = redirect("/dashboard")
+        resp = set_auth_token(email,resp)
+        return resp
 
     return "Invalid or expired link", 401
 
@@ -491,8 +513,6 @@ def scan_receipt_image():
     if not existing.data:
         supabase.table('users').insert({'email': user_email}).execute()
     
-    session['user_email'] = user_email
-    
     return jsonify({
         "success": True,
         "products_found": len(extracted.get('products', [])),
@@ -501,6 +521,8 @@ def scan_receipt_image():
         "products": extracted.get('products', []),
         "matches": [{"product": m['product'], "warranty": {"part_covered": m['warranty']['part_covered'], "duration": f"{m['warranty']['duration_years']} years", "type": m['warranty']['type']}} for m in matches]
     })
+    resp = set_auth_token(user_email, resp)
+    return resp
     
 @ app.route('/api/scan-receipt', methods=['POST'])
 def scan_receipt():
@@ -536,9 +558,6 @@ def scan_receipt():
     if not existing.data:
         supabase.table('users').insert({'email': user_email}).execute()
 
-    # Set session
-    session['user_email'] = user_email
-
     return jsonify({
         "success": True,
         "products_found": len(extracted.get('products', [])),
@@ -556,6 +575,8 @@ def scan_receipt():
             } for m in matches
         ]
     })
+    resp = set_auth_token(user_email, resp)
+    return resp
 def check_cpa():
     data = request.json
     purchase_date = data.get("purchase_date", "")
@@ -677,14 +698,12 @@ def start_claim():
             else {
                 "retailer_name": retailer,
                 "customer_service_email": "",
-                "customer_service_phone": "",
+                 "customer_service_phone": "",
             }
         )
 
         cpa_letter = generate_cpa_letter(user_data, product_data, retailer_data)
 
-    # Set session
-    session["user_email"] = email
     # Send CPA letter via email
     if cpa_letter and email:
         import threading
@@ -704,6 +723,8 @@ ClaimFlux SA
             send_email(email, subject, email_body)
 
         threading.Thread(target=send_later).start()
+
+    # set auth token    
     return jsonify(
         {
             "success": True,
@@ -713,7 +734,8 @@ ClaimFlux SA
             "cpa_letter": cpa_letter if cpa_letter else None,
         }
     )
-
+    resp = set_auth_token(email, resp)
+    return resp
 
 @app.route("/api/generate-letter", methods=["POST"])
 def generate_letter():
@@ -792,10 +814,10 @@ ClaimFlux SA
 
 @app.route('/api/my-claims')
 def my_claims():
-    if 'user_email' not in session:
+    email = get_user_from_token()
+    if not email:
         return jsonify({"error": "Not logged in"}), 401
     
-    email = session['user_email']
     
     claims = supabase.table('claims') \
         .select('*, warranties(*)') \
