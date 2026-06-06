@@ -203,38 +203,38 @@ def extract_products_from_receipt(receipt_text):
 
 def match_products_to_warranties(extracted_data):
     """Take extracted products and find matching warranties"""
-
+    
     matches = []
-
-    for product in extracted_data.get("products", []):
-        brand = product.get("brand", "")
-        model = product.get("model", "")
-
-        # Search database for matching warranties
+    seen_pairs = set()
+    
+    for product in extracted_data.get('products', []):
+        brand = product.get('brand', '')
+        model = product.get('model', '')
+        
         if brand:
-            response = supabase.table("warranties") \
-                .select("*") \
-                .ilike("brand", f"%{brand}%") \
+            response = supabase.table('warranties') \
+                .select('*') \
+                .ilike('brand', f'%{brand}%') \
                 .limit(5) \
                 .execute()
-
-            seen_ids = set()
+            
             for warranty in response.data:
-                if warranty["id"] in seen_ids:
+                pair_key = (product.get('model', ''), warranty['id'])
+                if pair_key in seen_pairs:
                     continue
-                seen_ids.add(warranty["id"])
+                seen_pairs.add(pair_key)
                 matches.append({
-                        "product": product,
-                        "warranty": {
-                            "id": warranty["id"],
-                            "brand": warranty["brand"],
-                            "part_covered": warranty["part_covered"],
-                            "duration_years": warranty["duration_years"],
-                            "type": warranty["warranty_type"],
-                            "region": warranty.get("region", "global"),
-                        }
+                    "product": product,
+                    "warranty": {
+                        "id": warranty['id'],
+                        "brand": warranty['brand'],
+                        "part_covered": warranty['part_covered'],
+                        "duration_years": warranty['duration_years'],
+                        "type": warranty['warranty_type'],
+                        "region": warranty.get('region', 'global')
+                    }
                 })
-
+    
     return matches
 
 supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_ROLE"))
@@ -397,7 +397,8 @@ def scan():
 
 @app.route("/dashboard")
 def dashboard():
-    if not get_user_from_token():
+    user = get_user_from_token():
+    if not user:
         return redirect("/")
     return render_template("dashboard.html")
 
@@ -564,7 +565,6 @@ def scan_receipt_image():
     return resp
 
 @app.route('/api/scan-receipt', methods=['POST'])
-
 def scan_receipt():
     """Upload receipt text or image description and get warranty matches"""
     data = request.json
@@ -748,19 +748,23 @@ def start_claim():
     if cpa_letter and email:
         import threading
         def send_later():
-            subject = f"Your CPA Claim Letter - {product_query}"
-            email_body = f"""Hi there,
+            try:
+                subject = f"Your CPA Claim Letter - {product_query}"
+                email_body = f"""Hi there,
 
 Your CPA claim has been started with ClaimFlux SA.
 
 {cpa_letter}
 
 ---
-
 ClaimFlux SA
-[https://claimflux.co.za](https://claimflux.co.za/)
+https://claimflux.co.za
 """
-            send_email(email, subject, email_body)
+                result = send_email(email, subject, email_body)
+                if not result:
+                    print(f"Failed to send email to {email}")
+            except Exception as e:
+                print(f"Email error: {e}")
 
         threading.Thread(target=send_later).start()
 
@@ -856,7 +860,7 @@ ClaimFlux SA
 def my_claims():
     email = get_user_from_token()
     if not email:
-        return jsonify({"error": "Not logged in"}), 401
+        return jsonify({"error": "Not logged in", "claims": [], "count": 0, "cpa_alerts": []}), 200
     
     
     claims = supabase.table('claims') \
