@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from flask import Flask, render_template, request, jsonify, session, redirect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from supabase import create_client
 import openai
 import os
@@ -16,6 +18,12 @@ from email.mime.multipart import MIMEMultipart
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", secrets.token_hex(16))
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["100 per hour"],
+    storage_uri="memory://"
+)
 def set_auth_token(email, response):
     """Set auth token as cookie"""
     token = secrets.token_urlsafe(32)
@@ -419,7 +427,7 @@ def verify_login(token):
 
 # ============ API ENDPOINTS ============
 
-
+@limiter.limit("30 per minute")
 @app.route("/api/search")
 def search():
     query = request.args.get("q", "").strip()
@@ -467,6 +475,7 @@ def search():
 
 
 @app.route("/api/check-cpa", methods=["POST"])
+@limiter.limit("10 per hour")
 @app.route('/api/scan-receipt-image', methods=['POST'])
 def scan_receipt_image():
     """Upload receipt image and extract products using GPT-4o Vision"""
@@ -618,7 +627,7 @@ def check_cpa():
         }
     )
 
-
+@limiter.limit("20 per hour")
 @app.route("/api/start-claim", methods=["POST"])
 def start_claim():
     data = request.json
