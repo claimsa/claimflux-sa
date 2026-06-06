@@ -397,7 +397,7 @@ def scan():
 
 @app.route("/dashboard")
 def dashboard():
-    user = get_user_from_token():
+    user = get_user_from_token()
     if not user:
         return redirect("/")
     return render_template("dashboard.html")
