@@ -397,10 +397,10 @@ def scan():
 
 @app.route("/dashboard")
 def dashboard():
-    user = get_user_from_token()
-    if not user:
+    email = requests.args.get("email")
+    if not email:
         return redirect("/")
-    return render_template("dashboard.html")
+    return render_template("dashboard.html", user_email_=email)
 
 
 @app.route("/verify-login/<token>")
@@ -858,9 +858,9 @@ ClaimFlux SA
 
 @app.route('/api/my-claims')
 def my_claims():
-    email = get_user_from_token()
+    email = request.args.get("email")
     if not email:
-        return jsonify({"error": "Not logged in", "claims": [], "count": 0, "cpa_alerts": []}), 200
+        return jsonify({"error": "No email", "claims": [], "count": 0, "cpa_alerts": [], "urgent_count": 0}), 200
     
     
     claims = supabase.table('claims') \
