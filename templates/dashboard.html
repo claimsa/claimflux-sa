@@ -43,7 +43,8 @@
     <script>
     async function loadDashboard() {
         try {
-            const response = await fetch('/api/my-claims');
+            const email = new URLSearchParams(window.location.search).get("email")
+            const response = await fetch('/api/my-claims?email=' + encodeURIComponent(email));
             const data = await response.json();
             
             if (data.cpa_alerts && data.cpa_alerts.length > 0) {
