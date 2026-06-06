@@ -473,8 +473,37 @@ def search():
 
     return jsonify({"match": True, "count": len(results), "results": results})
 
-
 @app.route("/api/check-cpa", methods=["POST"])
+def check_cpa():
+    data = request.json
+    purchase_date = data.get('purchase_date', '')
+    
+    try:
+        purchase_date_obj = datetime.strptime(purchase_date, '%Y-%m-%d')
+    except ValueError:
+        return jsonify({"error": "Use YYYY-MM-DD format"}), 400
+    
+    cpa_deadline = purchase_date_obj + timedelta(days=182)
+    today = datetime.now()
+    days_remaining = (cpa_deadline - today).days
+    
+    if days_remaining < 0:
+        return jsonify({
+            "cpa_eligible": False,
+            "message": f"CPA warranty expired on {cpa_deadline.strftime('%d %B %Y')}.",
+            "days_expired": abs(days_remaining)
+        })
+    
+    urgency = "HIGH" if days_remaining < 30 else "MEDIUM" if days_remaining < 90 else "LOW"
+    
+    return jsonify({
+        "cpa_eligible": True,
+        "days_remaining": days_remaining,
+        "deadline": cpa_deadline.strftime('%d %B %Y'),
+        "urgency": urgency,
+        "rights": ["Full refund", "Free replacement", "Free repair at supplier's cost"],
+        "next_step": "We can generate a formal CPA claim letter for you."
+    })
 
 @limiter.limit("10 per hour")
 @app.route('/api/scan-receipt-image', methods=['POST'])
@@ -533,8 +562,9 @@ def scan_receipt_image():
     })
     resp = set_auth_token(user_email, resp)
     return resp
-    
-@ app.route('/api/scan-receipt', methods=['POST'])
+
+@app.route('/api/scan-receipt', methods=['POST'])
+
 def scan_receipt():
     """Upload receipt text or image description and get warranty matches"""
     data = request.json
