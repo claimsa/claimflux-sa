@@ -2,3 +2,4 @@ flask
 openai
 supabase
 python-dotenv
+flask-limiter
