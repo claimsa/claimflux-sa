@@ -475,6 +475,7 @@ def search():
 
 
 @app.route("/api/check-cpa", methods=["POST"])
+
 @limiter.limit("10 per hour")
 @app.route('/api/scan-receipt-image', methods=['POST'])
 def scan_receipt_image():
@@ -522,7 +523,7 @@ def scan_receipt_image():
     if not existing.data:
         supabase.table('users').insert({'email': user_email}).execute()
     
-    return jsonify({
+    resp = jsonify({
         "success": True,
         "products_found": len(extracted.get('products', [])),
         "warranty_matches": len(matches),
