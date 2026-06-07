@@ -13,7 +13,7 @@
             <a href="/" class="text-xl font-bold">ClaimFlux SA</a>
             <nav class="space-x-4">
                 <a href="/scan" class="text-gray-600 hover:text-black text-sm">Scan Receipt</a>
-                <a href="/dashboard" class="text-gray-600 hover:text-black text-sm">Dashboard</a>
+                <a href="/dashboard" id="navDashboard" class="text-gray-600 hover:text-black text-sm">Dashboard</a>
             </nav>
         </div>
     </header>
@@ -135,6 +135,7 @@
         btn.textContent = 'Filing...';
         
         const email = document.getElementById('emailInput').value;
+        localstorage.setItem('claimflux_email', email);
         const purchaseDate = document.getElementById('purchaseDate').value;
         const retailer = document.getElementById('retailerSelect').value;
         const issue = document.getElementById('issueInput').value;
@@ -188,5 +189,10 @@
         btn.textContent = 'File My Claim →';
     }
     </script>
+    // Update nav dashboard link with email from last action
+    const savedEmail = localStorage.getItem('claimflux_email');
+    if (savedEmail) {
+        document.getElementById('navDashboard').href = '/dashboard?email=' + encodeURIComponent(savedEmail);
+    }
 </body>
 </html>
