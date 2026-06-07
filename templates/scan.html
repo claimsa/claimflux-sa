@@ -113,7 +113,7 @@
     
     async function scanStructured() {
         const email = document.getElementById('emailInput').value.trim();
-        localstorage.setItem('claimflux_email', email);
+        localStorage.setItem('claimflux_email', email);
         const retailer = document.getElementById('retailerInput').value;
         const purchaseDate = document.getElementById('purchaseDateInput').value;
         const btn = document.getElementById('textBtn');
