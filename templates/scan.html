@@ -84,7 +84,7 @@
     </div>
 
     <script>
-    function showResults(data, container) {
+    function showResults(data, container, email) {
         if (data.error) {
             container.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-xl p-6"><p class="text-red-800">${data.error}</p></div>`;
             return;
@@ -107,7 +107,7 @@
             });
         }
         
-        html += `<div class="mt-4"><a href="/dashboard" class="bg-black text-white px-6 py-3 rounded-xl font-semibold inline-block hover:bg-gray-800 transition">View Dashboard →</a></div></div>`;
+        html += `<div class="mt-4"><a href="/dashboard?email=${encodedURIComponent(email)}" class="bg-black text-white px-6 py-3 rounded-xl font-semibold inline-block hover:bg-gray-800 transition">View Dashboard →</a></div></div>`;
         container.innerHTML = html;
     }
     
@@ -145,7 +145,7 @@
                 body: JSON.stringify({email, receipt_text: receiptText})
             });
             const data = await response.json();
-            showResults(data, resultsDiv);
+            showResults(data, resultsDiv, email);
         } catch (error) {
             resultsDiv.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-xl p-6"><p class="text-red-800">Error. Please try again.</p></div>';
         }
@@ -177,7 +177,7 @@
                 body: JSON.stringify({email, image_base64: base64})
             });
             const data = await response.json();
-            showResults(data, resultsDiv);
+            showResults(data, resultsDiv, email);
         } catch (error) {
             resultsDiv.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-xl p-6"><p class="text-red-800">Error. Please try again.</p></div>';
         }
