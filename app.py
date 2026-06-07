@@ -211,32 +211,34 @@ def match_products_to_warranties(extracted_data):
         brand = product.get('brand', '')
         model = product.get('model', '')
         
-        if brand:
-            response = supabase.table('warranties') \
-                .select('*') \
-                .ilike('brand', f'%{brand}%') \
-                .limit(5) \
-                .execute()
-            
-            for warranty in response.data:
-                pair_key = (product.get('model', ''), warranty['id'])
-                if pair_key in seen_pairs:
-                    continue
-                seen_pairs.add(pair_key)
-                matches.append({
-                    "product": product,
-                    "warranty": {
-                        "id": warranty['id'],
-                        "brand": warranty['brand'],
-                        "part_covered": warranty['part_covered'],
-                        "duration_years": warranty['duration_years'],
-                        "type": warranty['warranty_type'],
-                        "region": warranty.get('region', 'global')
-                    }
-                })
+        if not brand:
+            continue
+        
+        response = supabase.table('warranties') \
+            .select('*') \
+            .ilike('brand', f'%{brand}%') \
+            .limit(5) \
+            .execute()
+        
+        for warranty in response.data:
+            pair_key = (product.get('model', ''), warranty['id'])
+            if pair_key in seen_pairs:
+                continue
+            seen_pairs.add(pair_key)
+            matches.append({
+                "product": product,
+                "warranty": {
+                    "id": warranty['id'],
+                    "brand": warranty['brand'],
+                    "part_covered": warranty['part_covered'],
+                    "duration_years": warranty['duration_years'],
+                    "type": warranty['warranty_type'],
+                    "region": warranty.get('region', 'global')
+                }
+            })
     
     return matches
-
+    
 supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_ROLE"))
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
