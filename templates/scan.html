@@ -13,7 +13,7 @@
             <a href="/" class="text-xl font-bold">ClaimFlux SA</a>
             <nav class="space-x-4">
                 <a href="/scan" class="text-black font-semibold text-sm">Scan Receipt</a>
-                <a href="/dashboard" class="text-gray-600 hover:text-black text-sm">Dashboard</a>
+                <a href="/dashboard" id="navDashboard" class="text-gray-600 hover:text-black text-sm">Dashboard</a>
             </nav>
         </div>
     </header>
@@ -113,6 +113,7 @@
     
     async function scanStructured() {
         const email = document.getElementById('emailInput').value.trim();
+        localstorage.setItem('claimflux_email', email);
         const retailer = document.getElementById('retailerInput').value;
         const purchaseDate = document.getElementById('purchaseDateInput').value;
         const btn = document.getElementById('textBtn');
@@ -154,6 +155,7 @@
     
     async function scanImage() {
         const email = document.getElementById('emailInputImg').value.trim();
+        localstorage.setItem('claimflux_email', email);
         const fileInput = document.getElementById('receiptImage');
         const btn = document.getElementById('imgBtn');
         const resultsDiv = document.getElementById('results');
@@ -184,5 +186,10 @@
         btn.disabled = false; btn.textContent = 'Scan Image →';
     }
     </script>
+    // Update nav dashboard link with email from last action
+    const savedEmail = localStorage.getItem('claimflux_email');
+    if (savedEmail) {
+        document.getElementById('navDashboard').href = '/dashboard?email=' + encodeURIComponent(savedEmail);
+    }
 </body>
 </html>
