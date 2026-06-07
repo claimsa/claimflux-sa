@@ -185,11 +185,11 @@
         }
         btn.disabled = false; btn.textContent = 'Scan Image →';
     }
-    </script>
     // Update nav dashboard link with email from last action
     const savedEmail = localStorage.getItem('claimflux_email');
     if (savedEmail) {
         document.getElementById('navDashboard').href = '/dashboard?email=' + encodeURIComponent(savedEmail);
     }
+    </script>
 </body>
 </html>
