@@ -22,9 +22,9 @@
         <h1 class="text-4xl font-bold tracking-tight text-gray-900 mb-2">Scan Your Receipt</h1>
         <p class="text-lg text-gray-600 mb-8">Enter your receipt details or upload a photo. We'll find hidden warranties.</p>
         
-        <!-- Option 1: Structured Receipt Input -->
+        <!-- Option 1: Structured Input -->
         <div class="bg-white rounded-2xl shadow-lg border p-6 mb-6">
-            <h3 class="font-semibold text-lg mb-3">📋 Enter Receipt Details</h3>
+            <h3 class="font-semibold text-lg mb-3">Enter Receipt Details</h3>
             <p class="text-sm text-gray-500 mb-4">Fill in the details from your receipt below.</p>
             
             <label class="block text-sm text-gray-500 mb-1">Your Email *</label>
@@ -33,23 +33,15 @@
             <label class="block text-sm text-gray-500 mb-1">Retailer</label>
             <select id="retailerInput" class="w-full px-4 py-3 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-black">
                 <option value="">Select retailer</option>
-                <option>Takealot</option>
-                <option>Makro</option>
-                <option>Game</option>
-                <option>Builders Warehouse</option>
-                <option>Hirsch's</option>
-                <option>Dion Wired</option>
-                <option>Checkers</option>
-                <option>Woolworths</option>
-                <option>Pick n Pay</option>
-                <option>Spar</option>
-                <option>Other</option>
+                <option>Takealot</option><option>Makro</option><option>Game</option><option>Builders Warehouse</option>
+                <option>Hirsch's</option><option>Dion Wired</option><option>Checkers</option><option>Woolworths</option>
+                <option>Pick n Pay</option><option>Spar</option><option>Other</option>
             </select>
             
             <label class="block text-sm text-gray-500 mb-1">Product 1</label>
             <div class="grid grid-cols-2 gap-3 mb-3">
                 <input type="text" id="product1Name" placeholder="Product name (e.g. Samsung Fridge)" class="px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-black">
-                <input type="text" id="product1Model" placeholder="Model number (e.g. RF23M8070SG)" class="px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-black">
+                <input type="text" id="product1Model" placeholder="Model number" class="px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-black">
             </div>
             <input type="text" id="product1Price" placeholder="Price (e.g. R14,999)" class="w-full px-4 py-3 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-black">
             
@@ -63,20 +55,18 @@
             <label class="block text-sm text-gray-500 mb-1">Purchase Date *</label>
             <input type="date" id="purchaseDateInput" class="w-full px-4 py-3 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-black">
             
-            <button onclick="scanStructured()" id="textBtn" class="w-full bg-black text-white py-3 rounded-xl font-semibold hover:bg-gray-800 transition">Check Warranties →</button>
+            <button onclick="scanStructured()" id="textBtn" class="w-full bg-black text-white py-3 rounded-xl font-semibold hover:bg-gray-800 transition">Check Warranties</button>
             <p class="text-xs text-gray-500 mt-3 text-center">We'll match your products against our warranty database.</p>
         </div>
         
         <!-- Option 2: Upload Image -->
         <div class="bg-white rounded-2xl shadow-lg border p-6">
-            <h3 class="font-semibold text-lg mb-3">📸 Upload Receipt Photo</h3>
+            <h3 class="font-semibold text-lg mb-3">Upload Receipt Photo</h3>
             <p class="text-sm text-gray-500 mb-4">Take a photo of your receipt or upload a screenshot.</p>
             <label class="block text-sm text-gray-500 mb-2">Your Email</label>
             <input type="email" id="emailInputImg" placeholder="your@email.com" class="w-full px-4 py-3 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-black">
-            
             <input type="file" id="receiptImage" accept="image/*" class="w-full mb-4">
-            
-            <button onclick="scanImage()" id="imgBtn" class="w-full bg-black text-white py-3 rounded-xl font-semibold hover:bg-gray-800 transition">Scan Image →</button>
+            <button onclick="scanImage()" id="imgBtn" class="w-full bg-black text-white py-3 rounded-xl font-semibold hover:bg-gray-800 transition">Scan Image</button>
             <p class="text-xs text-gray-500 mt-3 text-center">Image is analyzed with AI for best accuracy.</p>
         </div>
         
@@ -86,114 +76,89 @@
     <script>
     function showResults(data, container, email) {
         if (data.error) {
-            container.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-xl p-6"><p class="text-red-800">${data.error}</p></div>`;
+            container.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-xl p-6"><p class="text-red-800">' + data.error + '</p></div>';
             return;
         }
-        
-        let html = `<div class="bg-green-50 border border-green-200 rounded-xl p-6"><h3 class="text-lg font-semibold text-green-900 mb-2">Scan Complete</h3><p class="text-green-800">Found <strong>${data.products_found}</strong> product(s). <strong>${data.warranty_matches}</strong> warranty match(es).</p>`;
-        
+        var html = '<div class="bg-green-50 border border-green-200 rounded-xl p-6"><h3 class="text-lg font-semibold text-green-900 mb-2">Scan Complete</h3><p class="text-green-800">Found <strong>' + data.products_found + '</strong> product(s). <strong>' + data.warranty_matches + '</strong> warranty match(es).</p>';
         if (data.products && data.products.length > 0) {
             html += '<div class="mt-4 space-y-3">';
-            data.products.forEach(p => {
-                html += `<div class="bg-white rounded-xl p-4 border"><p class="font-semibold">${p.brand} — ${p.model}</p><p class="text-sm text-gray-500">Category: ${p.category} | Purchased: ${p.purchase_date || 'Unknown'}</p><p class="text-sm text-gray-500">Price: R${p.purchase_price || 'Unknown'}</p></div>`;
+            data.products.forEach(function(p) {
+                html += '<div class="bg-white rounded-xl p-4 border"><p class="font-semibold">' + p.brand + ' ' + p.model + '</p><p class="text-sm text-gray-500">Category: ' + p.category + ' | Purchased: ' + (p.purchase_date || 'Unknown') + '</p><p class="text-sm text-gray-500">Price: R' + (p.purchase_price || 'Unknown') + '</p></div>';
             });
             html += '</div>';
         }
-        
         if (data.matches && data.matches.length > 0) {
             html += '<h4 class="font-semibold mt-4 mb-2">Warranty Matches:</h4>';
-            data.matches.forEach(m => {
-                html += `<div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-2"><p class="font-semibold">${m.product.brand} — ${m.product.model}</p><p class="text-sm">${m.warranty.part_covered} — <strong>${m.warranty.duration}</strong> (${m.warranty.type})</p></div>`;
+            data.matches.forEach(function(m) {
+                html += '<div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-2"><p class="font-semibold">' + m.product.brand + ' ' + m.product.model + '</p><p class="text-sm">' + m.warranty.part_covered + ' <strong>' + m.warranty.duration + '</strong> (' + m.warranty.type + ')</p></div>';
             });
         }
-        
-        html += `<div class="mt-4"><a href="/dashboard?email=${encodedURIComponent(email)}" class="bg-black text-white px-6 py-3 rounded-xl font-semibold inline-block hover:bg-gray-800 transition">View Dashboard →</a></div></div>`;
+        html += '<div class="mt-4"><a href="/dashboard?email=' + encodeURIComponent(email) + '" class="bg-black text-white px-6 py-3 rounded-xl font-semibold inline-block hover:bg-gray-800 transition">View Dashboard</a></div></div>';
         container.innerHTML = html;
     }
     
     async function scanStructured() {
-        const email = document.getElementById('emailInput').value.trim();
+        var email = document.getElementById('emailInput').value.trim();
         localStorage.setItem('claimflux_email', email);
-        const retailer = document.getElementById('retailerInput').value;
-        const purchaseDate = document.getElementById('purchaseDateInput').value;
-        const btn = document.getElementById('textBtn');
-        const resultsDiv = document.getElementById('results');
+        var retailer = document.getElementById('retailerInput').value;
+        var purchaseDate = document.getElementById('purchaseDateInput').value;
+        var btn = document.getElementById('textBtn');
+        var resultsDiv = document.getElementById('results');
         
         if (!email) { alert('Please enter your email.'); return; }
         if (!purchaseDate) { alert('Please enter the purchase date.'); return; }
-
-        let receiptText = `Retailer: ${retailer || 'Unknown'}\nDate: ${purchaseDate}\n\n`;
-
-        const p1Name = document.getElementById('product1Name').value.trim();
-        const p1Model = document.getElementById('product1Model').value.trim();
-        const p1Price = document.getElementById('product1Price').value.trim();
-        if (p1Name) { 
-            receiptText += `${p1Name} ${p1Model} - R${p1Price.replace('R','').trim()}\n`; 
-        }
-
-        const p2Name = document.getElementById('product2Name').value.trim();
-        const p2Model = document.getElementById('product2Model').value.trim();
-        const p2Price = document.getElementById('product2Price').value.trim();
-        if (p2Name) { 
-            receiptText += `${p2Name} ${p2Model} - R${p2Price.replace('R','').trim()}\n`; 
-        }
         
+        var receiptText = 'Retailer: ' + (retailer || 'Unknown') + '\nDate: ' + purchaseDate + '\n\n';
+        var p1Name = document.getElementById('product1Name').value.trim();
+        var p1Model = document.getElementById('product1Model').value.trim();
+        var p1Price = document.getElementById('product1Price').value.trim().replace('R','').replace('r','').trim();
+        if (p1Name) { receiptText += p1Name + ' ' + p1Model + ' - R' + p1Price + '\n'; }
+        var p2Name = document.getElementById('product2Name').value.trim();
+        var p2Model = document.getElementById('product2Model').value.trim();
+        var p2Price = document.getElementById('product2Price').value.trim().replace('R','').replace('r','').trim();
+        if (p2Name) { receiptText += p2Name + ' ' + p2Model + ' - R' + p2Price + '\n'; }
         if (!p1Name) { alert('Please enter at least one product.'); return; }
         
         btn.disabled = true; btn.textContent = 'Checking...';
         resultsDiv.innerHTML = '<div class="text-center py-8"><div class="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-black rounded-full"></div></div>';
         
         try {
-            const response = await fetch('/api/scan-receipt', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({email, receipt_text: receiptText})
-            });
-            const data = await response.json();
+            var response = await fetch('/api/scan-receipt', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email: email, receipt_text: receiptText}) });
+            var data = await response.json();
             showResults(data, resultsDiv, email);
         } catch (error) {
             resultsDiv.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-xl p-6"><p class="text-red-800">Error. Please try again.</p></div>';
         }
-        btn.disabled = false; btn.textContent = 'Check Warranties →';
+        btn.disabled = false; btn.textContent = 'Check Warranties';
     }
     
     async function scanImage() {
-        const email = document.getElementById('emailInputImg').value.trim();
+        var email = document.getElementById('emailInputImg').value.trim();
         localStorage.setItem('claimflux_email', email);
-        const fileInput = document.getElementById('receiptImage');
-        const btn = document.getElementById('imgBtn');
-        const resultsDiv = document.getElementById('results');
+        var fileInput = document.getElementById('receiptImage');
+        var btn = document.getElementById('imgBtn');
+        var resultsDiv = document.getElementById('results');
         
         if (!email) { alert('Please enter your email.'); return; }
         if (!fileInput.files[0]) { alert('Please select an image.'); return; }
         
-        btn.disabled = true; btn.textContent = 'Analyzing with AI...';
-        resultsDiv.innerHTML = '<div class="text-center py-8"><div class="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-black rounded-full"></div><p class="text-gray-500 mt-2">Reading receipt image...</p></div>';
+        btn.disabled = true; btn.textContent = 'Analyzing...';
+        resultsDiv.innerHTML = '<div class="text-center py-8"><div class="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-black rounded-full"></div></div>';
         
         try {
-            const reader = new FileReader();
-            const base64 = await new Promise((resolve) => {
-                reader.onload = () => resolve(reader.result.split(',')[1]);
-                reader.readAsDataURL(fileInput.files[0]);
-            });
-            
-            const response = await fetch('/api/scan-receipt-image', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({email, image_base64: base64})
-            });
-            const data = await response.json();
+            var reader = new FileReader();
+            var base64 = await new Promise(function(resolve) { reader.onload = function() { resolve(reader.result.split(',')[1]); }; reader.readAsDataURL(fileInput.files[0]); });
+            var response = await fetch('/api/scan-receipt-image', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email: email, image_base64: base64}) });
+            var data = await response.json();
             showResults(data, resultsDiv, email);
         } catch (error) {
             resultsDiv.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-xl p-6"><p class="text-red-800">Error. Please try again.</p></div>';
         }
-        btn.disabled = false; btn.textContent = 'Scan Image →';
+        btn.disabled = false; btn.textContent = 'Scan Image';
     }
-    // Update nav dashboard link with email from last action
-    const savedEmail = localStorage.getItem('claimflux_email');
-    if (savedEmail) {
-        document.getElementById('navDashboard').href = '/dashboard?email=' + encodeURIComponent(savedEmail);
-    }
+    
+    var savedEmail = localStorage.getItem('claimflux_email');
+    if (savedEmail) { document.getElementById('navDashboard').href = '/dashboard?email=' + encodeURIComponent(savedEmail); }
     </script>
 </body>
 </html>
