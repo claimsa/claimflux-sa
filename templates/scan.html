@@ -121,7 +121,8 @@
         
         btn.disabled = true; btn.textContent = 'Checking...';
         resultsDiv.innerHTML = '<div class="text-center py-8"><div class="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-black rounded-full"></div></div>';
-        
+
+        alert('Receipt text being sent:\n' + receiptText);
         try {
             var response = await fetch('/api/scan-receipt', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email: email, receipt_text: receiptText}) });
             var data = await response.json();
