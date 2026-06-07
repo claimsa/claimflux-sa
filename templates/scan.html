@@ -121,9 +121,6 @@
         
         if (!email) { alert('Please enter your email.'); return; }
         if (!purchaseDate) { alert('Please enter the purchase date.'); return; }
-        
-        const retailer = document.getElementById('retailerInput').value;
-        const purchaseDate = document.getElementById('purchaseDateInput').value;
 
         let receiptText = `Retailer: ${retailer || 'Unknown'}\nDate: ${purchaseDate}\n\n`;
 
