@@ -397,7 +397,7 @@ def scan():
 
 @app.route("/dashboard")
 def dashboard():
-    email = requests.args.get("email")
+    email = request.args.get("email")
     if not email:
         return redirect("/")
     return render_template("dashboard.html", user_email_=email)
