@@ -566,6 +566,81 @@ def scan_receipt_image():
     resp = set_auth_token(user_email, resp)
     return resp
 
+@app.route('/api/scan-structured', methods=['POST'])
+def scan_structured():
+    """Direct product-to-warranty matching for structured input"""
+    data = request.json
+    user_email = data.get('email', '').strip()
+    retailer = data.get('retailer', '')
+    purchase_date = data.get('purchase_date', '')
+    products = data.get('products', [])
+    
+    if not user_email:
+        return jsonify({"error": "Email is required."}), 400
+    if not products:
+        return jsonify({"error": "No products provided."}), 400
+    
+    # Save user
+    existing = supabase.table('users').select('*').eq('email', user_email).execute()
+    if not existing.data:
+        supabase.table('users').insert({'email': user_email}).execute()
+    
+    all_matches = []
+    all_products = []
+    
+    for p in products:
+        name = p.get('name', '')
+        model = p.get('model', '')
+        price = p.get('price', '')
+        
+        all_products.append({
+            'brand': name,
+            'model': model,
+            'category': 'other',
+            'purchase_date': purchase_date,
+            'purchase_price': price,
+            'retailer': retailer
+        })
+        
+        # Search database
+        if name:
+            response = supabase.table('warranties') \
+                .select('*') \
+                .ilike('brand', f'%{name}%') \
+                .limit(3) \
+                .execute()
+            
+            for w in response.data:
+                all_matches.append({
+                    "product": {"brand": name, "model": model},
+                    "warranty": {
+                        "id": w['id'],
+                        "brand": w['brand'],
+                        "part_covered": w['part_covered'],
+                        "duration_years": w['duration_years'],
+                        "type": w['warranty_type'],
+                        "region": w.get('region', 'global')
+                    }
+                })
+    
+    # Remove duplicate warranties
+    seen = set()
+    unique_matches = []
+    for m in all_matches:
+        key = (m['product']['model'], m['warranty']['id'])
+        if key not in seen:
+            seen.add(key)
+            unique_matches.append(m)
+    
+    resp = jsonify({
+        "success": True,
+        "products_found": len(all_products),
+        "warranty_matches": len(unique_matches),
+        "products": all_products,
+        "matches": [{"product": m['product'], "warranty": {"part_covered": m['warranty']['part_covered'], "duration": f"{m['warranty']['duration_years']} years", "type": m['warranty']['type']}} for m in unique_matches]
+    })
+    resp = set_auth_token(user_email, resp)
+    return resp
 @app.route('/api/scan-receipt', methods=['POST'])
 def scan_receipt():
     """Upload receipt text or image description and get warranty matches"""
