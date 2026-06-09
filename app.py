@@ -30,7 +30,7 @@ def set_auth_token(email, response):
     supabase.table('auth_tokens').insert({
         'email': email,
         'token': token,
-        'expires': 'NOW() + INTERVAL \'30 days\''
+        'expires': (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d %H:%M:%S')
     }).execute()
     response.set_cookie('auth_token', token, max_age=30*24*60*60, httponly=True, samesite='Lax')
     return response
