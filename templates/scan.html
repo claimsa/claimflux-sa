@@ -107,24 +107,23 @@
         
         if (!email) { alert('Please enter your email.'); return; }
         if (!purchaseDate) { alert('Please enter the purchase date.'); return; }
-        
-        var receiptText = 'Retailer: ' + (retailer || 'Unknown') + '\nDate: ' + purchaseDate + '\n\n';
+
         var p1Name = document.getElementById('product1Name').value.trim();
         var p1Model = document.getElementById('product1Model').value.trim();
         var p1Price = document.getElementById('product1Price').value.trim().replace('R','').replace('r','').trim();
-        if (p1Name) { receiptText += p1Name + ' ' + p1Model + ' - R' + p1Price + '\n'; }
         var p2Name = document.getElementById('product2Name').value.trim();
         var p2Model = document.getElementById('product2Model').value.trim();
         var p2Price = document.getElementById('product2Price').value.trim().replace('R','').replace('r','').trim();
-        if (p2Name) { receiptText += p2Name + ' ' + p2Model + ' - R' + p2Price + '\n'; }
         if (!p1Name) { alert('Please enter at least one product.'); return; }
         
         btn.disabled = true; btn.textContent = 'Checking...';
         resultsDiv.innerHTML = '<div class="text-center py-8"><div class="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-black rounded-full"></div></div>';
 
-        alert('Receipt text being sent:\n' + receiptText);
         try {
-            var response = await fetch('/api/scan-receipt', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email: email, receipt_text: receiptText}) });
+            var products = [];
+            if (p1Name) { products.push({name: p1Name, model: p1Model, price: p1Price}); }
+            if (p2Name) { products.push({name: p2Name, model: p2Model, price: p2Price}); }
+            var response = await fetch('/api/scan-structured', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email: email, retailer: retailer, purchase_date: purchaseDate, products: products}) });
             var data = await response.json();
             showResults(data, resultsDiv, email);
         } catch (error) {
