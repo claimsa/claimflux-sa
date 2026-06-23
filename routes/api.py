@@ -579,36 +579,48 @@ def start_claim():
 @api_bp.route("/api/my-claims")
 def my_claims():
 
-    email = request.args.get(
-        "email"
-    )
+    email = request.args.get("email")
+
+    if not email:
+
+        return jsonify({
+            "claims": [],
+            "count": 0,
+            "total_recovered": 0,
+            "urgent_count": 0,
+            "cpa_alerts": []
+        })
 
     claims = (
 
-        supabase.table(
-            "claims"
-        )
-
+        supabase.table("claims")
         .select("*")
-
-        .eq(
-            "user_email",
-            email
-        )
-
+        .eq("user_email", email)
         .execute()
+
+    )
+
+    total_recovered = sum(
+
+        c.get("user_payout", 0) or 0
+
+        for c in claims.data
+
+        if c.get("status") == "paid"
 
     )
 
     return jsonify({
 
-        "count":
+        "claims": claims.data,
 
-        len(claims.data),
+        "count": len(claims.data),
 
-        "claims":
+        "total_recovered": total_recovered,
 
-        claims.data
+        "urgent_count": 0,
+
+        "cpa_alerts": []
 
     })
 
