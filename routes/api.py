@@ -3,6 +3,9 @@ from flask import Blueprint, jsonify, request
 from extensions import limiter
 from extensions import supabase
 
+import secrets
+from datetime import datetime, timedelta
+
 from services.cpa_service import check_cpa_eligibility
 from services.auth_service import set_auth_token
 
@@ -13,6 +16,12 @@ from services.receipt_service import (
 
 from services.warranty_service import (
     match_products_to_warranties
+)
+
+from services.email_service import send_email
+
+from services.cpa_letter_service import (
+    generate_cpa_letter
 )
 
 api_bp = Blueprint("api", __name__)
@@ -414,3 +423,193 @@ def scan_structured():
     )
 
     return resp
+
+@api_bp.route("/api/login", methods=["POST"])
+def login():
+
+    email = request.json.get(
+        "email",
+        ""
+    )
+
+    token = secrets.token_urlsafe(32)
+
+    expires = (
+        datetime.now()
+        + timedelta(hours=1)
+    ).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+
+    supabase.table(
+        "login_tokens"
+    ).insert({
+
+        "email": email,
+
+        "token": token,
+
+        "expires": expires,
+
+        "used": False
+
+    }).execute()
+
+    login_url = (
+        f"http://127.0.0.1:5000/"
+        f"verify-login/{token}"
+    )
+
+    body = f"""
+Hi there,
+
+Click this link to login:
+
+{login_url}
+
+This expires in one hour.
+
+ClaimFlux SA
+"""
+
+    send_email(
+        email,
+        "Your ClaimFlux Login Link",
+        body
+    )
+
+    return jsonify({
+
+        "success": True,
+
+        "message":
+        "Check your email."
+
+    })
+
+@api_bp.route(
+    "/api/generate-letter",
+    methods=["POST"]
+)
+def generate_letter():
+
+    data = request.json
+
+    user_data = {
+
+        "name": data.get("name", "")
+
+    }
+
+    product_data = {
+
+        "product_name":
+        data.get("product_name", ""),
+
+        "issue_description":
+        data.get(
+            "issue_description",
+            ""
+        ),
+
+        "desired_outcome":
+        data.get(
+            "desired_outcome",
+            "repair"
+        )
+    }
+
+    retailer_data = {
+
+        "retailer_name":
+        data.get(
+            "retailer",
+            ""
+        )
+
+    }
+
+    letter = generate_cpa_letter(
+
+        user_data,
+
+        product_data,
+
+        retailer_data
+
+    )
+
+    return jsonify({
+
+        "letter": letter
+
+    })
+
+@api_bp.route(
+    "/api/start-claim",
+    methods=["POST"]
+)
+def start_claim():
+
+    data = request.json
+
+    claim = supabase.table(
+        "claims"
+    ).insert({
+
+        "user_email":
+        data["email"],
+
+        "status":
+        "initiated",
+
+        "claim_amount": 0
+
+    }).execute()
+
+    return jsonify({
+
+        "success": True,
+
+        "claim_id":
+        claim.data[0]["id"]
+
+    })
+
+@api_bp.route("/api/my-claims")
+def my_claims():
+
+    email = request.args.get(
+        "email"
+    )
+
+    claims = (
+
+        supabase.table(
+            "claims"
+        )
+
+        .select("*")
+
+        .eq(
+            "user_email",
+            email
+        )
+
+        .execute()
+
+    )
+
+    return jsonify({
+
+        "count":
+
+        len(claims.data),
+
+        "claims":
+
+        claims.data
+
+    })
+
+
