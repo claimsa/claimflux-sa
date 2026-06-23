@@ -152,10 +152,10 @@ def extract_products_from_receipt(receipt_text):
 
         return extract_products_ai(receipt_text)
 
+    from services.logger import logger
+
     except Exception as e:
-
-        print("AI extraction failed:", e)
-
+        logger.error(f"AI extraction failed: {e}")
         return extract_products_rules(receipt_text)
 
 # 5. Image receipt extraction
