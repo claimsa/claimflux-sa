@@ -545,25 +545,34 @@ def generate_letter():
 
     })
 
-@api_bp.route(
-    "/api/start-claim",
-    methods=["POST"]
-)
+@api_bp.route("/api/start-claim", methods=["POST"])
 def start_claim():
 
     data = request.json
 
+    email = data.get("email")
+
+    issue = data.get(
+
+        "issue_description",
+
+        "Defective product"
+
+    )
+
     claim = supabase.table(
+
         "claims"
+
     ).insert({
 
-        "user_email":
-        data["email"],
+        "user_email": email,
 
-        "status":
-        "initiated",
+        "status": "initiated",
 
-        "claim_amount": 0
+        "claim_amount": 0,
+
+        "issue_description": issue
 
     }).execute()
 
@@ -572,7 +581,12 @@ def start_claim():
         "success": True,
 
         "claim_id":
-        claim.data[0]["id"]
+
+        claim.data[0]["id"],
+
+        "message":
+
+        "Claim started successfully."
 
     })
 
