@@ -21,8 +21,9 @@ def set_auth_token(email, response):
     response.set_cookie(
         "auth_token",
         token,
-        max_age=30 * 24 * 60 * 60,
+        max_age=30*24*60*60,
         httponly=True,
+        secure=True,
         samesite="Lax"
     )
 
