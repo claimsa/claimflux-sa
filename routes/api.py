@@ -596,46 +596,42 @@ def my_claims():
     email = request.args.get("email")
 
     if not email:
-
         return jsonify({
             "claims": [],
             "count": 0,
+            "active_claims": 0,
             "total_recovered": 0,
             "urgent_count": 0,
             "cpa_alerts": []
         })
 
-    claims = (
-
+    claims_response = (
         supabase.table("claims")
         .select("*")
         .eq("user_email", email)
         .execute()
-
     )
+
+    claims = claims_response.data
 
     total_recovered = sum(
-
-        c.get("user_payout", 0) or 0
-
-        for c in claims.data
-
-        if c.get("status") == "paid"
-
+        claim.get("user_payout", 0) or 0
+        for claim in claims
+        if claim.get("status") == "paid"
     )
 
+    active_claims = len([
+        claim for claim in claims
+        if claim.get("status") in ["initiated", "pending"]
+    ])
+
+    urgent_count = 0
+
     return jsonify({
-
-        "claims": claims.data,
-
-        "count": len(claims.data),
-
+        "claims": claims,
+        "count": len(claims),
+        "active_claims": active_claims,
         "total_recovered": total_recovered,
-
-        "urgent_count": 0,
-
+        "urgent_count": urgent_count,
         "cpa_alerts": []
-
     })
-
-
