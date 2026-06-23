@@ -3,3 +3,4 @@ openai
 supabase
 python-dotenv
 flask-limiter
+gunicorn
