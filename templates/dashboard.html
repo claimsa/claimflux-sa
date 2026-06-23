@@ -1,84 +1,473 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard — ClaimFlux SA</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ClaimFlux SA Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Inter',sans-serif;
+}
+
+body{
+    background:#f5f7fb;
+    color:#111827;
+}
+
+.container{
+    width:95%;
+    max-width:1400px;
+    margin:auto;
+}
+
+header{
+    background:white;
+    padding:20px 0;
+    box-shadow:0 2px 10px rgba(0,0,0,.05);
+}
+
+header .container{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.logo{
+    font-size:28px;
+    font-weight:700;
+    color:#2563eb;
+}
+
+.email{
+    color:#6b7280;
+    font-size:14px;
+}
+
+.page-title{
+    margin-top:40px;
+}
+
+.page-title h1{
+    font-size:36px;
+}
+
+.page-title p{
+    color:#6b7280;
+    margin-top:8px;
+}
+
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+    margin-top:30px;
+}
+
+.card{
+    background:white;
+    border-radius:20px;
+    padding:25px;
+    box-shadow:0 5px 20px rgba(0,0,0,.06);
+}
+
+.card h3{
+    color:#6b7280;
+    font-size:15px;
+    margin-bottom:15px;
+}
+
+.card h1{
+    font-size:36px;
+}
+
+.green{
+    color:#10b981;
+}
+
+.orange{
+    color:#f59e0b;
+}
+
+.red{
+    color:#ef4444;
+}
+
+.section{
+    margin-top:40px;
+}
+
+.section h2{
+    margin-bottom:20px;
+}
+
+.claim-card{
+    background:white;
+    border-radius:20px;
+    padding:25px;
+    margin-bottom:20px;
+    box-shadow:0 5px 20px rgba(0,0,0,.05);
+}
+
+.claim-card h3{
+    margin-bottom:15px;
+}
+
+.claim-card p{
+    color:#6b7280;
+    margin-bottom:10px;
+}
+
+.badge{
+    display:inline-block;
+    padding:8px 14px;
+    border-radius:20px;
+    color:white;
+    font-size:13px;
+    font-weight:600;
+}
+
+.badge.orange{
+    background:#f59e0b;
+}
+
+.badge.green{
+    background:#10b981;
+}
+
+.badge.red{
+    background:#ef4444;
+}
+
+.badge.gray{
+    background:#6b7280;
+}
+
+.alert-card{
+    background:#fff7ed;
+    border-left:5px solid orange;
+    padding:20px;
+    border-radius:12px;
+    margin-bottom:15px;
+}
+
+.empty{
+    background:white;
+    padding:40px;
+    text-align:center;
+    border-radius:20px;
+    color:#9ca3af;
+}
+
+.loading{
+    text-align:center;
+    padding:50px;
+    color:#6b7280;
+}
+
+@media(max-width:768px){
+
+.page-title h1{
+    font-size:28px;
+}
+
+.card h1{
+    font-size:28px;
+}
+
+}
+
+</style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    
-    <header class="border-b bg-white">
-        <div class="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="/" class="text-xl font-bold">ClaimFlux SA</a>
-            <nav class="space-x-4">
-                <a href="/scan" class="text-gray-600 hover:text-black text-sm">Scan Receipt</a>
-                <a href="/dashboard" class="text-black font-semibold text-sm">Dashboard</a>
-            </nav>
-        </div>
-    </header>
 
-    <div class="max-w-3xl mx-auto mt-10 px-6">
-        <h1 class="text-3xl font-bold mb-2">Your Dashboard</h1>
-        <p class="text-gray-500 mb-8">Track your claims and CPA deadlines here.</p>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div class="bg-white rounded-2xl p-6 shadow-sm border"><p class="text-gray-500 text-sm">Total Claims</p><p class="text-3xl font-bold mt-1" id="totalClaims">0</p></div>
-            <div class="bg-white rounded-2xl p-6 shadow-sm border"><p class="text-gray-500 text-sm">Recovered So Far</p><p class="text-3xl font-bold text-green-600 mt-1" id="totalRecovered">R0</p></div>
-            <div class="bg-white rounded-2xl p-6 shadow-sm border"><p class="text-gray-500 text-sm">Urgent Alerts</p><p class="text-3xl font-bold text-red-600 mt-1" id="urgentAlerts">0</p></div>
-        </div>
-        
-        <div id="alertsSection" class="hidden mb-6"><h2 class="text-xl font-semibold mb-3">CPA Deadline Alerts</h2></div>
-        
-        <div class="bg-white rounded-2xl p-8 shadow-sm border mb-6">
-            <h3 class="font-semibold text-lg mb-2">Start a New Check</h3>
-            <p class="text-gray-600 mb-4">Check another product for hidden warranties.</p>
-            <a href="/" class="bg-black text-white px-6 py-3 rounded-xl font-semibold inline-block hover:bg-gray-800 transition">Search Products →</a>
-        </div>
-        
-        <h2 class="text-xl font-semibold mb-4">Your Claims</h2>
-        <div id="claimsList" class="space-y-4"><p class="text-gray-400 text-center py-8">Loading...</p></div>
-    </div>
+<body>
 
-    <script>
-    async function loadDashboard() {
-        try {
-            const email = new URLSearchParams(window.location.search).get("email")
-            const response = await fetch('/api/my-claims?email=' + encodeURIComponent(email));
-            const data = await response.json();
-            
-            if (data.cpa_alerts && data.cpa_alerts.length > 0) {
-                let alertHtml = '';
-                data.cpa_alerts.forEach(a => {
-                    const colors = {'expired':'bg-red-100 border-red-300 text-red-800','critical':'bg-red-50 border-red-200 text-red-700','warning':'bg-yellow-50 border-yellow-200 text-yellow-700','ok':'bg-green-50 border-green-200 text-green-700'};
-                    const icons = {'expired':'❌','critical':'🚨','warning':'⚠️','ok':'✅'};
-                    alertHtml += `<div class="border rounded-xl p-4 mb-3 ${colors[a.urgency]}"><div class="flex items-center justify-between"><p class="font-semibold">${icons[a.urgency]} ${a.product_name}</p><span class="text-sm font-bold">${a.days_left > 0 ? a.days_left + ' days left' : 'EXPIRED'}</span></div><p class="text-sm mt-1">Retailer: ${a.retailer || 'Unknown'} | Deadline: ${a.deadline}</p></div>`;
-                });
-                document.getElementById('alertsSection').innerHTML += alertHtml;
-                document.getElementById('alertsSection').classList.remove('hidden');
-            }
-            
-            document.getElementById('totalClaims').textContent = data.count;
-            document.getElementById('totalRecovered').textContent = 'R' + (data.total_recovered || 0).toFixed(2);
-            document.getElementById('urgentAlerts').textContent = data.urgent_count || 0;
-            
-            if (data.claims.length === 0) {
-                document.getElementById('claimsList').innerHTML = '<div class="bg-white rounded-2xl p-10 shadow-sm border text-center"><p class="text-gray-400 text-lg">No claims filed yet.</p><a href="/" class="text-black underline mt-2 inline-block">Search a product →</a></div>';
-                return;
-            }
-            
-            let html = '';
-            data.claims.forEach(c => {
-                const statusColors = {'paid':'bg-green-100 text-green-800','filed':'bg-blue-100 text-blue-800','initiated':'bg-yellow-100 text-yellow-800'};
-                const statusColor = statusColors[c.status] || 'bg-gray-100 text-gray-800';
-                html += `<div class="bg-white rounded-2xl p-6 shadow-sm border"><div class="flex justify-between items-start"><div><h3 class="font-semibold">${c.warranties?.brand || 'Product'} — ${c.warranties?.part_covered || 'Warranty Claim'}</h3><p class="text-gray-500 text-sm">Filed: ${new Date(c.filed_date).toLocaleDateString('en-ZA')}</p></div><span class="px-3 py-1 rounded-full text-sm font-medium ${statusColor}">${c.status}</span></div>${c.user_payout ? `<p class="mt-3 text-green-600 font-semibold">Your payout: R${c.user_payout.toFixed(2)}</p>` : ''}</div>`;
-            });
-            document.getElementById('claimsList').innerHTML = html;
-        } catch (error) {
-            document.getElementById('claimsList').innerHTML = '<p class="text-red-500">Error loading. Please refresh.</p>';
-        }
-    }
-    loadDashboard();
-    </script>
+<header>
+
+<div class="container">
+
+<div class="logo">
+ClaimFlux SA
+</div>
+
+<div class="email" id="userEmail">
+Loading...
+</div>
+
+</div>
+
+</header>
+
+<div class="container">
+
+<div class="page-title">
+
+<h1>Dashboard</h1>
+
+<p>
+Track claims, warranties and CPA alerts.
+</p>
+
+</div>
+
+<div class="stats-grid">
+
+<div class="card">
+
+<h3>Total Claims</h3>
+
+<h1 id="claimCount">0</h1>
+
+</div>
+
+<div class="card">
+
+<h3>Active Claims</h3>
+
+<h1 class="orange" id="activeClaims">
+0
+</h1>
+
+</div>
+
+<div class="card">
+
+<h3>Total Recovered</h3>
+
+<h1 class="green" id="totalRecovered">
+R0
+</h1>
+
+</div>
+
+<div class="card">
+
+<h3>Urgent Alerts</h3>
+
+<h1 class="red" id="urgentCount">
+0
+</h1>
+
+</div>
+
+</div>
+
+<div class="section">
+
+<h2>CPA Alerts</h2>
+
+<div id="alertsContainer">
+
+<div class="empty">
+No alerts
+</div>
+
+</div>
+
+</div>
+
+<div class="section">
+
+<h2>Your Claims</h2>
+
+<div id="claimsContainer">
+
+<div class="loading">
+
+Loading claims...
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+function getStatusColor(status){
+
+status=status.toLowerCase();
+
+if(status==="paid") return "green";
+
+if(status==="initiated") return "orange";
+
+if(status==="rejected") return "red";
+
+return "gray";
+
+}
+
+function renderClaims(claims){
+
+let html="";
+
+if(claims.length===0){
+
+html=`
+<div class="empty">
+
+No claims found.
+
+</div>
+`;
+
+document.getElementById("claimsContainer").innerHTML=html;
+
+return;
+
+}
+
+claims.forEach(claim=>{
+
+html+=`
+
+<div class="claim-card">
+
+<h3>
+${claim.product_name || "Product"}
+</h3>
+
+<p>
+
+Issue:
+
+${claim.issue_description || "N/A"}
+
+</p>
+
+<p>
+
+Status:
+
+<span class="badge ${getStatusColor(claim.status)}">
+
+${claim.status}
+
+</span>
+
+</p>
+
+<p>
+
+Amount:
+
+R${claim.claim_amount || 0}
+
+</p>
+
+</div>
+
+`;
+
+});
+
+document.getElementById("claimsContainer").innerHTML=html;
+
+}
+
+function renderAlerts(alerts){
+
+let html="";
+
+if(alerts.length===0){
+
+html=`
+
+<div class="empty">
+
+No CPA alerts.
+
+</div>
+
+`;
+
+document.getElementById("alertsContainer").innerHTML=html;
+
+return;
+
+}
+
+alerts.forEach(alert=>{
+
+html+=`
+
+<div class="alert-card">
+
+<strong>
+
+${alert.product_name}
+
+</strong>
+
+<br><br>
+
+${alert.message}
+
+</div>
+
+`;
+
+});
+
+document.getElementById("alertsContainer").innerHTML=html;
+
+}
+
+const params=new URLSearchParams(window.location.search);
+
+const email=params.get("email");
+
+document.getElementById("userEmail").innerText=email || "";
+
+fetch("/api/my-claims?email="+email)
+
+.then(response=>response.json())
+
+.then(data=>{
+
+document.getElementById("claimCount").innerText=
+data.count;
+
+document.getElementById("activeClaims").innerText=
+data.active_claims;
+
+document.getElementById("totalRecovered").innerText=
+"R"+data.total_recovered;
+
+document.getElementById("urgentCount").innerText=
+data.urgent_count;
+
+renderClaims(data.claims);
+
+renderAlerts(data.cpa_alerts);
+
+})
+
+.catch(error=>{
+
+document.getElementById("claimsContainer").innerHTML=`
+
+<div class="empty">
+
+Failed to load claims.
+
+</div>
+
+`;
+
+});
+
+</script>
+
 </body>
 </html>
