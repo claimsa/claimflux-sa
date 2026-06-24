@@ -1,28 +1,28 @@
 import json
 import re
-from datetime import datetime
 
 from extensions import openai_client
+from services.logger import logger
 
-# 2. Rule-based extraction
+
 def extract_products_rules(receipt_text):
 
     brands = [
-        "Samsung","LG","Defy","Hisense","KIC",
-        "Bosch","Siemens","Miele","Whirlpool",
-        "GE","Russell Hobbs","Apple","Sony",
-        "Huawei","Philips"
-    ]
-
-    retailers = [
-        "Takealot",
-        "Makro",
-        "Game",
-        "Checkers",
-        "Woolworths",
-        "Builders",
-        "Pick n Pay",
-        "Spar"
+        "Samsung",
+        "LG",
+        "Defy",
+        "Hisense",
+        "KIC",
+        "Bosch",
+        "Siemens",
+        "Miele",
+        "Whirlpool",
+        "GE",
+        "Russell Hobbs",
+        "Apple",
+        "Sony",
+        "Huawei",
+        "Philips"
     ]
 
     products = []
@@ -41,7 +41,6 @@ def extract_products_rules(receipt_text):
         for brand in brands:
 
             if brand.lower() in line.lower():
-
                 found_brand = brand
                 break
 
@@ -63,25 +62,19 @@ def extract_products_rules(receipt_text):
                     .replace(",", "")
                     .replace(" ", "")
                 )
-
-            except:
+            except Exception:
                 pass
 
-        products.append({
-
-            "brand": found_brand,
-
-            "model": line[:100],
-
-            "category": "other",
-
-            "purchase_date": "Unknown",
-
-            "purchase_price": price,
-
-            "retailer": "Unknown"
-
-        })
+        products.append(
+            {
+                "brand": found_brand,
+                "model": line[:100],
+                "category": "other",
+                "purchase_date": "Unknown",
+                "purchase_price": price,
+                "retailer": "Unknown"
+            }
+        )
 
     total = sum(
         p["purchase_price"]
@@ -90,32 +83,24 @@ def extract_products_rules(receipt_text):
     )
 
     return {
-
         "products": products,
-
         "total_spent": round(total, 2)
-
     }
 
-# 3. AI extraction
+
 def extract_products_ai(receipt_text):
 
     response = openai_client.chat.completions.create(
-
         model="gpt-4o",
-
         response_format={"type": "json_object"},
-
         temperature=0.1,
-
         messages=[
-
             {
                 "role": "system",
                 "content": """
 Extract ALL products.
 
-Return only JSON:
+Return ONLY JSON:
 
 {
  "products":[
@@ -132,12 +117,10 @@ Return only JSON:
 }
 """
             },
-
             {
-                "role":"user",
-                "content":receipt_text[:4000]
+                "role": "user",
+                "content": receipt_text[:4000]
             }
-
         ]
     )
 
@@ -145,67 +128,86 @@ Return only JSON:
         response.choices[0].message.content
     )
 
-# 4. Hybrid extraction
+
 def extract_products_from_receipt(receipt_text):
 
     try:
 
         return extract_products_ai(receipt_text)
 
-    from services.logger import logger
-
     except Exception as e:
-        logger.error(f"AI extraction failed: {e}")
-        return extract_products_rules(receipt_text)
 
-# 5. Image receipt extraction
+        logger.error(
+            f"AI extraction failed: {e}"
+        )
+
+        return extract_products_rules(
+            receipt_text
+        )
+
+
 def extract_products_from_image(base64_image):
 
-    response = openai_client.chat.completions.create(
+    try:
 
-        model="gpt-4o",
+        response = openai_client.chat.completions.create(
 
-        max_tokens=1000,
+            model="gpt-4o",
 
-        messages=[
+            max_tokens=1000,
 
-            {
-                "role":"system",
+            messages=[
 
-                "content":"""
+                {
+                    "role": "system",
+
+                    "content": """
 Return ONLY JSON:
+
 {
  "products":[],
  "total_spent":0
 }
 """
-            },
+                },
 
-            {
-                "role":"user",
+                {
+                    "role": "user",
 
-                "content":[
+                    "content": [
 
-                    {
-                        "type":"text",
+                        {
+                            "type": "text",
 
-                        "text":"Extract products"
-                    },
+                            "text": "Extract products"
+                        },
 
-                    {
-                        "type":"image_url",
+                        {
+                            "type": "image_url",
 
-                        "image_url":{
-                            "url":
-                            f"data:image/jpeg;base64,{base64_image}"
+                            "image_url": {
+                                "url":
+                                f"data:image/jpeg;base64,{base64_image}"
+                            }
                         }
-                    }
 
-                ]
-            }
-        ]
-    )
+                    ]
+                }
 
-    return json.loads(
-        response.choices[0].message.content
-    )
+            ]
+        )
+
+        return json.loads(
+            response.choices[0].message.content
+        )
+
+    except Exception as e:
+
+        logger.error(
+            f"Image extraction failed: {e}"
+        )
+
+        return {
+            "products": [],
+            "total_spent": 0
+        }
