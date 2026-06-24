@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, redirect
 from extensions import supabase
 from services.auth_service import set_auth_token
 
+
 pages_bp = Blueprint("pages", __name__)
 
 
@@ -43,14 +44,9 @@ def verify_login(token):
             .execute()
         )
 
-        resp = redirect(
-            f"/dashboard?email={email}"
-        )
+        resp = redirect(f"/dashboard?email={email}")
 
-        resp = set_auth_token(
-            email,
-            resp
-        )
+        resp = set_auth_token(email, resp)
 
         return resp
 
