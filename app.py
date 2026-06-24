@@ -1,12 +1,16 @@
 from flask import Flask
-import os
+from config import Config
+from extensions import limiter
 
 app = Flask(__name__)
+app.config.from_object(Config)
 
-@app.route("/")
-def home():
-    return "ClaimFlux SA is alive"
+limiter.init_app(app)
+
+from routes.pages import pages_bp
+
+app.register_blueprint(pages_bp)
+
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+    app.run()
