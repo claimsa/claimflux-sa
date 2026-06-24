@@ -1,57 +1,32 @@
 from flask import Blueprint, render_template, redirect
 
 from extensions import supabase
-
 from services.auth_service import set_auth_token
 
-pages_bp = Blueprint(
-"pages",
-**name**
-)
+pages_bp = Blueprint("pages", **name**)
 
 @pages_bp.route("/")
 def home():
-
-```
-return render_template(
-    "index.html"
-)
-```
+return render_template("index.html")
 
 @pages_bp.route("/scan")
 def scan():
-
-```
-return render_template(
-    "scan.html"
-)
-```
+return render_template("scan.html")
 
 @pages_bp.route("/dashboard")
 def dashboard():
-
-```
-return render_template(
-    "dashboard.html"
-)
-```
+return render_template("dashboard.html")
 
 @pages_bp.route("/verify-login/<token>")
 def verify_login(token):
 
 ```
 response = (
-
     supabase.table("login_tokens")
-
     .select("*")
-
     .eq("token", token)
-
     .eq("used", False)
-
     .execute()
-
 )
 
 if response.data:
@@ -65,9 +40,7 @@ if response.data:
         .execute()
     )
 
-    resp = redirect(
-        f"/dashboard?email={email}"
-    )
+    resp = redirect(f"/dashboard?email={email}")
 
     resp = set_auth_token(
         email,
